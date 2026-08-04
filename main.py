@@ -28,7 +28,7 @@ def main():
 
         thought, plan_result = plan(question)
 
-        action_result = act()
+        action_result = act(question)
 
         success, observation = observe()
 
