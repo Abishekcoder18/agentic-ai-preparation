@@ -30,7 +30,7 @@ def main():
 
         action_result = act(question)
 
-        success, observation = observe()
+        success, observation = observe(action_result)
 
         log_iteration(
             {
