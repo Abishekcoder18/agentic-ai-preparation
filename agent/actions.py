@@ -7,10 +7,11 @@ def act(question):
 
     results = search_web(question)
 
-    print(f"✅ Found {len(results)} search results")
-
     if not results:
+        print("⚠️ Search failed. Will retry in the next iteration.")
         return ""
+
+    print(f"✅ Found {len(results)} search results")
 
     print("\nTop Search Results:")
 
@@ -22,6 +23,10 @@ def act(question):
     print("\n📖 Reading the top result...")
 
     page_content = fetch_webpage(top_url)
+
+    if not page_content:
+        print("⚠️ Failed to read webpage. Will retry in the next iteration.")
+        return ""
 
     print(f"✅ Retrieved {len(page_content)} characters")
 
