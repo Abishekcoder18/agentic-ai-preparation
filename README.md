@@ -243,15 +243,17 @@ agentic-ai-preparation/
 
 ## 10. Technology Stack
 
+## 10. Technology Stack
+
 | Component | Technology |
 |---|---|
 | Programming Language | Python |
-| LLM API | OpenRouter |
-| LLM SDK | OpenAI Python SDK |
+| LLM Runtime | Ollama |
+| LLM Model | qwen2.5:3b-instruct |
 | Web Search | DDGS |
 | Web Reader | Requests + BeautifulSoup4 |
 | Logging | JSON |
-| Configuration | python-dotenv |
+| Configuration | Local configuration |
 | Version Control | Git + GitHub |
 | Architecture Diagram | Draw.io |
 
@@ -261,14 +263,16 @@ agentic-ai-preparation/
 
 The following versions are used in the Cycle 1 implementation.
 
+## 11. Framework and SDK Versions
+
 | Component | Version |
 |---|---|
 | Python | 3.13.5 |
-| OpenAI Python SDK | 2.51.0 |
+| Ollama | 0.32.6 |
+| Qwen2.5 | qwen2.5:3b-instruct |
 | DDGS | 9.14.4 |
 | Requests | 2.34.2 |
 | BeautifulSoup4 | 4.15.0 |
-| python-dotenv | 1.2.2 |
 
 ---
 
@@ -323,19 +327,14 @@ pip install -r requirements.txt
 
 ---
 
-## 14. Environment Variables
+## 14. Local LLM Setup
 
-Create a local `.env` file in the project root:
+ResearchMind uses Ollama to run the LLM locally.
 
-```text
-OPENROUTER_API_KEY=your_api_key_here
-```
+Verify Ollama installation:
 
-The API key must not be committed to GitHub.
-
-The `.env` file is included in `.gitignore`.
-
----
+```powershell
+ollama --version
 
 ## 15. Running the Project
 

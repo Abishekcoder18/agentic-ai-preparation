@@ -1,35 +1,33 @@
-import os
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
 
-API_KEY = os.getenv("OPENROUTER_API_KEY")
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "qwen2.5:3b-instruct"
 
 
 def ask_llm(prompt):
+    """
+    Send a prompt to the local Ollama model.
 
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json",
-    }
+    Args:
+        prompt (str): Prompt sent to the LLM.
+
+    Returns:
+        str: Generated response.
+    """
 
     data = {
-        "model": "openai/gpt-oss-20b:free",
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
+        "model": MODEL,
+        "prompt": prompt,
+        "stream": False
     }
 
     response = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        headers=headers,
+        OLLAMA_URL,
         json=data,
+        timeout=120
     )
 
     response.raise_for_status()
 
-    return response.json()["choices"][0]["message"]["content"]
+    return response.json()["response"]
