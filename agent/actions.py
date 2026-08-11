@@ -9,25 +9,34 @@ def act(question):
 
     if not results:
         print("⚠️ Search failed. Will retry in the next iteration.")
-        return ""
+        return None, ""
 
     print(f"✅ Found {len(results)} search results")
 
     print("\nTop Search Results:")
 
-    for index, result in enumerate(results[:3], start=1):
+    for index, result in enumerate(results[:5], start=1):
         print(f"{index}. {result['title']}")
 
-    top_url = results[0]["href"]
+    print("\n📖 Trying search results...")
 
-    print("\n📖 Reading the top result...")
+    for index, result in enumerate(results[:5], start=1):
+        url = result.get("href", "")
 
-    page_content = fetch_webpage(top_url)
+        if not url:
+            continue
 
-    if not page_content:
-        print("⚠️ Failed to read webpage. Will retry in the next iteration.")
-        return ""
+        print(f"\n🔗 Trying result {index}: {result['title']}")
 
-    print(f"✅ Retrieved {len(page_content)} characters")
+        page_content = fetch_webpage(url)
 
-    return page_content
+        if page_content:
+            print(f"✅ Retrieved {len(page_content)} characters")
+            print(f"🔗 Source: {url}")
+
+            return page_content, url
+
+        print("⚠️ Could not read this result. Trying the next result...")
+
+    print("❌ Could not retrieve any webpage from the search results.")
+    return None, ""
