@@ -4,7 +4,7 @@
 
 ResearchMind is an Agentic AI project that implements a single-agent loop for iterative web research.
 
-The system accepts a research question from the user, uses a real Large Language Model (LLM) to plan the research process, searches the web for relevant information, reads a webpage, observes the result, and decides whether the research is complete or another iteration is required.
+The system accepts a research question from the user, uses a real Large Language Model (LLM) to plan the research process, searches the web for relevant information, retrieves a readable webpage, evaluates whether the retrieved information is sufficient, refines the search when necessary, and generates a final cited research summary.
 
 This project implements **Use Case 2 - Iterative Web Research Agent** from the AI Development Preparation assignment.
 
@@ -24,11 +24,14 @@ The following Agent Loop requirements are implemented:
 - Real LLM call during the Plan stage
 - Web search tool
 - Webpage reader tool
-- Maximum iteration count
+- Maximum iteration limit
 - Explicit success-condition check
 - Iteration logging
 - Tool failure recovery
-- Iterative web research workflow
+- Iterative query refinement
+- Final research summary generation
+- Source citation
+- Multiple webpage retrieval fallback
 
 ---
 
@@ -36,171 +39,139 @@ The following Agent Loop requirements are implemented:
 
 - 🤖 Single-agent architecture
 - 🧠 LLM-based planning
-- 🔍 Web search using DDGS
+- 🔎 Web search using DDGS
 - 📖 Webpage content extraction
-- 🔄 Iterative retry mechanism
-- ✅ Explicit success condition
-- 📝 JSON iteration logging
+- 🔄 Iterative research loop
+- 🔄 Search query refinement
+- 🔁 Retry mechanism
 - 🛡️ Tool failure recovery
-- 🔐 API key protection using environment variables
+- ✅ Explicit success condition
+- 📝 Final research summary
+- 🔗 Source URL citation
+- 📋 JSON iteration logging
+- ⏱️ Maximum iteration limit
 
 ---
 
-## 4. Architecture
+## 4. Agent Workflow
 
-The system follows a modular agent architecture based on the Perceive → Plan → Act → Observe cycle.
+The ResearchMind agent follows this workflow:
 
-The complete one-page architecture diagram is available here:
+```text
+Research Question
+       |
+       v
+   PERCEIVE
+       |
+       v
+     PLAN
+  (Ollama LLM)
+       |
+       v
+      ACT
+       |
+       +----------------------+
+       |                      |
+       v                      v
+  Web Search             Web Reader
+     DDGS              Requests + BS4
+       |                      |
+       +----------+-----------+
+                  |
+                  v
+               OBSERVE
+            (Ollama LLM)
+                  |
+          +-------+-------+
+          |               |
+       Sufficient       Insufficient
+          |               |
+          v               v
+       Summarize      Refine Query
+          |               |
+          v               |
+      Cited Answer <------+
+```
 
-**`docs/architecture.png`**
+The loop continues until either:
 
-The editable Draw.io source is available here:
-
-**`docs/architecture.drawio`**
+1. The retrieved information is sufficient, or
+2. The maximum iteration limit is reached.
 
 ---
 
-## 5. Agent Loop
+## 5. Use Case
 
-### Perceive
+### UC2 - Iterative Web Research Agent
 
-The agent receives a research question from the user.
+The agent performs iterative research for a given question.
 
-Example:
-
-```text
-What is Agentic AI?
-```
-
-### Plan
-
-The planner sends the question to a real LLM through the OpenRouter API.
-
-The LLM generates:
-
-- A research thought
-- A research plan
-
-### Act
-
-The agent performs actions using callable tools:
-
-1. Web search
-2. Webpage reading
-
-### Observe
-
-The agent checks whether enough information was obtained.
-
-If successful:
+The workflow is:
 
 ```text
-Research Completed!
+Research Question
+       |
+       v
+Generate Plan
+       |
+       v
+Search Web
+       |
+       v
+Try Search Results
+       |
+       v
+Retrieve Readable Webpage
+       |
+       v
+Evaluate Information
+       |
+       +---- Sufficient ----> Generate Summary
+       |                           |
+       |                           v
+       |                      Cite Source
+       |
+       +---- Insufficient ----> Refine Query
+                                    |
+                                    v
+                              Next Iteration
 ```
 
-If unsuccessful, the agent continues to the next iteration until the maximum iteration count is reached.
+This demonstrates an agent that can perceive information, plan actions, use tools, observe results, refine its approach, and decide whether to continue or finish.
 
 ---
 
-## 6. Tools
+## 6. Technology Stack
 
-### Web Search Tool
-
-File:
-
-```text
-tools/search.py
-```
-
-Function:
-
-```python
-search_web(query)
-```
-
-The tool searches the web using DDGS and returns search results.
-
-### Webpage Reader Tool
-
-File:
-
-```text
-tools/reader.py
-```
-
-Function:
-
-```python
-fetch_webpage(url)
-```
-
-The tool retrieves a webpage and extracts readable text using Requests and BeautifulSoup4.
+| Component | Technology |
+|---|---|
+| Programming Language | Python |
+| LLM Runtime | Ollama |
+| LLM Model | Qwen2.5 3B Instruct |
+| Web Search | DDGS |
+| Web Reader | Requests + BeautifulSoup4 |
+| Logging | JSON |
+| Version Control | Git + GitHub |
+| Architecture Diagram | Draw.io |
 
 ---
 
-## 7. Tool Failure Recovery
+## 7. Framework and Software Versions
 
-The agent is designed to recover from tool failures without crashing.
+The following versions are used in the Cycle 1 implementation.
 
-### Search Failure
-
-If the search tool fails:
-
-```text
-⚠️ Search failed. Will retry in the next iteration.
-```
-
-The agent returns control to the loop and attempts another iteration.
-
-### Webpage Reader Failure
-
-If the webpage cannot be retrieved:
-
-```text
-⚠️ Failed to read webpage. Will retry in the next iteration.
-```
-
-The agent continues according to the iteration limit.
+| Component | Version |
+|---|---|
+| Python | 3.13.5 |
+| Ollama | 0.32.6 |
+| Qwen2.5 | qwen2.5:3b-instruct |
+| DDGS | 9.14.4 |
+| Requests | 2.34.2 |
+| BeautifulSoup4 | 4.15.0 |
 
 ---
 
-## 8. Iteration Logging
-
-Every agent iteration is logged to:
-
-```text
-logs/agent_log.json
-```
-
-The log records information such as:
-
-- Iteration number
-- User question
-- LLM thought
-- Plan
-- Action
-- Observation
-- Success status
-
-Example:
-
-```json
-{
-    "iteration": 1,
-    "question": "What is Agentic AI?",
-    "thought": "...",
-    "plan": "...",
-    "action": "Search executed",
-    "observation": "Information was retrieved",
-    "success": true
-}
-```
-
-The iteration trace can be manually reviewed to verify the agent's behavior.
-
----
-
-## 9. Project Structure
+## 8. Project Structure
 
 ```text
 agentic-ai-preparation/
@@ -212,7 +183,8 @@ agentic-ai-preparation/
 │   ├── logger.py
 │   ├── observer.py
 │   ├── perceive.py
-│   └── planner.py
+│   ├── planner.py
+│   └── summarizer.py
 │
 ├── config/
 │   └── settings.py
@@ -233,50 +205,180 @@ agentic-ai-preparation/
 ├── main.py
 ├── requirements.txt
 ├── README.md
-├── .gitignore
-└── .env
+└── .gitignore
 ```
 
-> `.env` contains local secrets and is excluded from Git using `.gitignore`.
+---
+
+## 9. Agent Components
+
+### Perceive
+
+Receives the research question from the user.
+
+### Plan
+
+Uses the local Ollama LLM to analyze the question and generate a research plan.
+
+### Act
+
+Uses external tools to:
+
+1. Search the web using DDGS.
+2. Try multiple search results.
+3. Retrieve webpage content using Requests and BeautifulSoup4.
+
+If one webpage cannot be accessed, the agent attempts another search result.
+
+### Observe
+
+Uses the LLM to determine whether the retrieved webpage contains enough relevant information.
+
+If the information is insufficient, the observer produces a refined search query.
+
+### Summarize
+
+When sufficient information has been collected, the summarizer generates a concise answer using the retrieved webpage and includes the source URL.
 
 ---
 
-## 10. Technology Stack
+## 10. Tool Failure Recovery
 
-## 10. Technology Stack
+ResearchMind is designed to continue operating when a tool fails.
 
-| Component | Technology |
-|---|---|
-| Programming Language | Python |
-| LLM Runtime | Ollama |
-| LLM Model | qwen2.5:3b-instruct |
-| Web Search | DDGS |
-| Web Reader | Requests + BeautifulSoup4 |
-| Logging | JSON |
-| Configuration | Local configuration |
-| Version Control | Git + GitHub |
-| Architecture Diagram | Draw.io |
+### Webpage Reader Failure
+
+If a webpage cannot be retrieved:
+
+```text
+Reader failed: 403 Client Error: Forbidden
+⚠️ Could not read this result. Trying the next result...
+```
+
+The system attempts the next available search result.
+
+If all results fail:
+
+```text
+❌ Could not retrieve any webpage from the search results.
+```
+
+The failure is passed to the observation stage and the agent continues to the next iteration instead of crashing.
+
+### Demonstrated Recovery
+
+A controlled reader failure was intentionally demonstrated during Cycle 1 testing.
+
+The agent produced:
+
+```text
+Reader failed: DEMO FAILURE - Simulated webpage reader failure
+```
+
+and continued through subsequent iterations without crashing.
+
+The temporary failure was then removed and the original reader implementation was restored.
 
 ---
 
-## 11. Framework and SDK Versions
+## 11. Iteration Logging
 
-The following versions are used in the Cycle 1 implementation.
+Every agent iteration is logged to:
 
-## 11. Framework and SDK Versions
+```text
+logs/agent_log.json
+```
 
-| Component | Version |
-|---|---|
-| Python | 3.13.5 |
-| Ollama | 0.32.6 |
-| Qwen2.5 | qwen2.5:3b-instruct |
-| DDGS | 9.14.4 |
-| Requests | 2.34.2 |
-| BeautifulSoup4 | 4.15.0 |
+The log records:
+
+- Iteration number
+- Research question
+- LLM thought
+- Plan
+- Retrieved action content
+- Source URL
+- Observation
+- Success status
+
+Example:
+
+```json
+{
+    "iteration": 1,
+    "question": "What is Agentic AI?",
+    "thought": "...",
+    "plan": "...",
+    "action": "...",
+    "source_url": "https://example.com",
+    "observation": "Information was sufficient",
+    "success": true
+}
+```
+
+The iteration trace can be manually reviewed to verify the agent's behavior.
 
 ---
 
-## 12. Requirements
+## 12. Maximum Iterations
+
+The agent uses a maximum iteration limit to prevent infinite execution.
+
+The current implementation uses:
+
+```python
+max_iterations = 3
+```
+
+The agent stops when either:
+
+1. The research information is sufficient, or
+2. The maximum number of iterations is reached.
+
+---
+
+## 13. Local LLM Setup
+
+ResearchMind uses **Ollama** to run the LLM locally.
+
+Verify the installation:
+
+```powershell
+ollama --version
+```
+
+Verify the model:
+
+```powershell
+ollama list
+```
+
+The required model is:
+
+```text
+qwen2.5:3b-instruct
+```
+
+If the model has not been downloaded:
+
+```powershell
+ollama pull qwen2.5:3b-instruct
+```
+
+Test the model:
+
+```powershell
+ollama run qwen2.5:3b-instruct
+```
+
+Exit the interactive session with:
+
+```text
+/bye
+```
+
+---
+
+## 14. Requirements
 
 The project dependencies are specified in:
 
@@ -284,64 +386,77 @@ The project dependencies are specified in:
 requirements.txt
 ```
 
-Important direct dependencies include:
+The main dependencies are:
 
 ```text
 ddgs==9.14.4
 requests==2.34.2
 beautifulsoup4==4.15.0
-openai==2.51.0
-python-dotenv==1.2.2
 ```
+
+Ollama is installed separately as a local application and is not installed through `pip`.
 
 ---
 
-## 13. Installation
+## 15. Installation
 
 ### Step 1 - Clone the repository
 
-```bash
+```powershell
 git clone <your-github-repository-url>
 cd agentic-ai-preparation
 ```
 
 ### Step 2 - Create a virtual environment
 
-```bash
+```powershell
 python -m venv .venv
 ```
 
 ### Step 3 - Activate the virtual environment
 
-Windows PowerShell:
-
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-### Step 4 - Install dependencies
+### Step 4 - Install Python dependencies
 
 ```powershell
 pip install -r requirements.txt
 ```
 
----
-
-## 14. Local LLM Setup
-
-ResearchMind uses Ollama to run the LLM locally.
-
-Verify Ollama installation:
+### Step 5 - Verify Ollama
 
 ```powershell
 ollama --version
+```
 
-## 15. Running the Project
+### Step 6 - Verify the model
+
+```powershell
+ollama list
+```
+
+If required:
+
+```powershell
+ollama pull qwen2.5:3b-instruct
+```
+
+---
+
+## 16. Running the Project
 
 Activate the virtual environment:
 
 ```powershell
 .venv\Scripts\Activate.ps1
+```
+
+Make sure Ollama is available and the required model is installed:
+
+```powershell
+ollama list
 ```
 
 Run the agent:
@@ -354,15 +469,15 @@ The program will ask for a research question.
 
 ---
 
-## 16. Sample Input
+## 17. Sample Input
 
 ```text
-What is Agentic AI?
+what is agentic AI?
 ```
 
 ---
 
-## 17. Sample Output
+## 18. Sample Output
 
 A successful execution follows this general flow:
 
@@ -371,7 +486,7 @@ A successful execution follows this general flow:
 🤖 Welcome to ResearchMind
 ==================================================
 
-🔍 Enter your research question: What is Agentic AI?
+🔍 Enter your research question: what is agentic AI?
 
 ========== Iteration 1 ==========
 
@@ -381,52 +496,53 @@ A successful execution follows this general flow:
 🛠️ Searching for information...
 ✅ Found 5 search results
 
-📖 Reading the top result...
+📖 Trying search results...
+
+🔗 Trying result 1: ...
+⚠️ Could not read this result. Trying the next result...
+
+🔗 Trying result 2: ...
 ✅ Retrieved webpage content
 
 📋 Checking if enough information was found...
+✅ Information is sufficient
 
 ✅ Research Completed!
+
+📝 Generating final research summary...
+
+==================================================
+📝 FINAL RESEARCH ANSWER
+==================================================
+
+Answer:
+...
+
+Source:
+https://...
 
 🏁 Agent Finished
 ```
 
-The exact LLM-generated thought and plan may vary between executions.
+The exact LLM-generated thought, plan, and answer may vary between executions.
 
 ---
 
-## 18. Failure Recovery Example
+## 19. Final Research Summary
 
-If a tool fails, the agent does not immediately terminate.
+When sufficient information is found, ResearchMind generates a final answer based on the retrieved webpage.
 
-Example:
+The output contains:
 
 ```text
-🛠️ Searching for information...
+Answer:
+<research summary>
 
-⚠️ Search failed. Will retry in the next iteration.
-
-========== Iteration 2 ==========
+Source:
+<source URL>
 ```
 
-The loop continues until the research succeeds or the maximum iteration count is reached.
-
----
-
-## 19. Maximum Iterations
-
-The agent uses a maximum iteration limit to prevent an infinite loop.
-
-The current implementation uses:
-
-```python
-max_iterations = 3
-```
-
-The agent stops when either:
-
-1. The success condition is reached, or
-2. The maximum number of iterations is reached.
+The summary is generated using the retrieved webpage content and the original research question.
 
 ---
 
@@ -438,70 +554,85 @@ Each development stage is committed separately to maintain a clear development h
 
 Example:
 
-```bash
+```powershell
 git add .
-git commit -m "Week 1 Day 10 - Document exact project versions and dependencies"
+git commit -m "Week 1 Day 11 - Finalize Cycle 1 documentation"
 git push
 ```
 
 ---
 
-## 21. Use Case
+## 21. Security
 
-### UC2 - Iterative Web Research Agent
+ResearchMind does not require an external API key for the Cycle 1 LLM implementation because Ollama runs locally.
 
-The agent is designed to perform iterative research for a given question.
+Security practices include:
 
-The workflow is:
+- No API keys are stored in source code.
+- No secrets are committed to GitHub.
+- `.env` is not required for the current Ollama implementation.
+- Local configuration and generated files should be reviewed before committing.
+
+---
+
+## 22. Architecture Diagram
+
+The Cycle 1 architecture diagram is available in:
 
 ```text
-Research Question
-       |
-       v
-Generate Plan
-       |
-       v
-Search Web
-       |
-       v
-Read Top Result
-       |
-       v
-Observe Result
-       |
-       +---- Success ----> Finish
-       |
-       +---- Failure ----> Retry
+docs/architecture.drawio
+docs/architecture.png
 ```
 
-This demonstrates an agent that can repeatedly perceive information, plan actions, use tools, observe results, and decide whether to continue.
+The diagram represents the Perceive → Plan → Act → Observe agent loop, including the LLM, web search, webpage reader, iteration control, logging, and final summary generation.
 
 ---
 
-## 22. Security
+## 23. Testing and Verification
 
-- API keys are stored in `.env`.
-- `.env` is excluded through `.gitignore`.
-- Secrets are not included in the source code.
-- API keys must never be committed to GitHub.
+Cycle 1 was manually tested using real research questions.
+
+Testing verified:
+
+- Successful LLM planning
+- Web search execution
+- Webpage retrieval
+- Multiple-result fallback
+- LLM-based information evaluation
+- Search query refinement
+- Maximum iteration handling
+- Tool failure recovery
+- JSON iteration logging
+- Final answer generation
+- Source URL citation
+
+A successful final execution was verified with:
+
+```text
+Search → Webpage Retrieval → Observation → Success → Summary → Source
+```
+
+A controlled webpage-reader failure was also demonstrated without crashing the agent.
 
 ---
 
-## 23. Future Improvements
+## 24. Future Improvements
 
 Potential future improvements include:
 
 - Improved webpage ranking
-- Query refinement
-- Citation generation
 - Multiple-source research
-- More advanced result evaluation
+- More advanced evidence evaluation
+- Better citation formatting
+- Improved query refinement
+- Additional research tools
+- MCP-based tool integration
 
 These improvements are outside the current Cycle 1 implementation.
 
 ---
 
-## 24. Author
+## 25. Author
 
 **S. P. Abishek Edwin Raj**
 
