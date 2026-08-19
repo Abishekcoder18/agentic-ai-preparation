@@ -1,0 +1,61 @@
+{
+  "orders": [
+    {
+      "order_id": "ORD1001",
+      "customer": "Customer 1",
+      "status": "Shipped",
+      "items": [
+        {
+          "product_id": "P100",
+          "name": "Wireless Mouse",
+          "quantity": 1
+        }
+      ],
+      "return_eligible": true
+    },
+    {
+      "order_id": "ORD1002",
+      "customer": "Customer 2",
+      "status": "Delivered",
+      "items": [
+        {
+          "product_id": "P101",
+          "name": "Mechanical Keyboard",
+          "quantity": 1
+        }
+      ],
+      "return_eligible": true
+    },
+    {
+      "order_id": "ORD1003",
+      "customer": "Customer 3",
+      "status": "Processing",
+      "items": [
+        {
+          "product_id": "P102",
+          "name": "USB-C Hub",
+          "quantity": 2
+        }
+      ],
+      "return_eligible": false
+    }
+  ],
+  "products": [
+    {
+      "product_id": "P100",
+      "name": "Wireless Mouse",
+      "stock": 25
+    },
+    {
+      "product_id": "P101",
+      "name": "Mechanical Keyboard",
+      "stock": 10
+    },
+    {
+      "product_id": "P102",
+      "name": "USB-C Hub",
+      "stock": 3
+    }
+  ],
+  "returns": []
+}
