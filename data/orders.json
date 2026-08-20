@@ -57,5 +57,10 @@
       "stock": 3
     }
   ],
-  "returns": []
+  "returns": [
+    {
+      "order_id": "ORD1001",
+      "status": "Return Initiated"
+    }
+  ]
 }
