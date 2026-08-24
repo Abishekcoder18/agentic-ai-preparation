@@ -18,6 +18,13 @@ async def call_tool(session, tool_name, arguments):
     print(json.dumps(json.loads(result.content[0].text), indent=2))
 
 
+async def read_recent_orders(session):
+    result = await session.read_resource("orders://recent")
+
+    print("\nRecent Orders:")
+    print(result.contents[0].text)
+
+
 async def main():
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
@@ -29,6 +36,16 @@ async def main():
             print("\nAvailable MCP Tools:")
             for tool in tools.tools:
                 print(f"- {tool.name}")
+
+            resources = await session.list_resources()
+
+            print("\nAvailable MCP Resources:")
+            for resource in resources.resources:
+                print(f"- {resource.uri}")
+
+            print("\n========== RESOURCE TEST ==========")
+
+            await read_recent_orders(session)
 
             print("\n========== TOOL TESTS ==========")
 
