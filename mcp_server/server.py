@@ -1,3 +1,4 @@
+import json
 from mcp.server import MCPServer
 
 from mcp_server.database import (
@@ -84,7 +85,7 @@ def recent_orders() -> str:
 
     recent = data["orders"][-5:]
 
-    return str(recent)
+    return json.dumps(recent, indent=2)
 
 
 if __name__ == "__main__":
